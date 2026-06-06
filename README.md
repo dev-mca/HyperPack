@@ -99,6 +99,15 @@ After HyperPack finishes:
 **Why do some apps still show their default icon?**  
 The icon pack may not include every app. HyperOS falls back to the original icon for unsupported apps. More popular icon packs (like Nothingness, Lawnicons, etc.) cover thousands of apps.
 
+**Why did HyperOS reset my icon pack?**
+This is normal and not a bug. HyperOS resets the icon pack in the following situations:
+
+- Device restart
+- Update of the dummy theme in the Theme Store
+- HyperOS system update
+
+Lösung: Einfach das Dummy-Theme im Theme Store nochmal antippen → Apply. Oder python hyperpack.py erneut ausführen um alles neu aufzuspielen (~60 Sekunden).
+
 **Do I need root?**  
 No. HyperPack uses only ADB and standard file operations.
 
