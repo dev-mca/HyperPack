@@ -32,7 +32,7 @@ HyperPack automates the entire process of converting a Play Store icon pack into
 ## Installation
 
 ```bash
-git clone https://github.com/dev-mca/hyperpack.git
+git clone https://github.com/yourusername/hyperpack.git
 cd hyperpack
 pip install -r requirements.txt   # optional but recommended
 ```
@@ -99,16 +99,6 @@ After HyperPack finishes:
 **Why do some apps still show their default icon?**  
 The icon pack may not include every app. HyperOS falls back to the original icon for unsupported apps. More popular icon packs (like Nothingness, Lawnicons, etc.) cover thousands of apps.
 
-**Why did HyperOS reset my icon pack?**
-
-This is normal and not a bug. HyperOS resets the icon pack in the following situations:
-
-- Device restart
-- Update of the dummy theme in the Theme Store
-- HyperOS system update
-
-Lösung: Einfach das Dummy-Theme im Theme Store nochmal antippen → Apply. Oder python hyperpack.py erneut ausführen um alles neu aufzuspielen (~60 Sekunden).
-
 **Do I need root?**  
 No. HyperPack uses only ADB and standard file operations.
 
@@ -150,3 +140,8 @@ Based on the community guide by [u/6oldsmith](https://www.reddit.com/r/HyperOS/c
 ## License
 
 MIT
+
+## Contributors
+
+- [dev-mca](https://github.com/dev-mca) — Project creator
+- Community contributor (r/HyperOS) — XML-based appfilter parser for non-standard icon pack formats

@@ -38,17 +38,17 @@ def find_appfilter(extracted_path):
     Returns Path or None.
     """
     extracted = Path(extracted_path)
-    
+
     # Prefer assets/appfilter.xml
     assets_filter = extracted / "assets" / "appfilter.xml"
     if assets_filter.exists():
         return assets_filter
-    
+
     # Fallback to res/xml/appfilter.xml
     res_filter = extracted / "res" / "xml" / "appfilter.xml"
     if res_filter.exists():
         return res_filter
-    
+
     return None
 
 
@@ -61,10 +61,67 @@ def extract_apk(apk_path, extract_dir):
     return extract_dir
 
 
+def _parse_appfilter_regex(xml_content):
+    """
+    Method 1: Regex-based parser.
+    Handles standard ComponentInfo{package/activity} format.
+    Returns list of (package_name, drawable_name) tuples.
+    """
+    pattern = r'component="ComponentInfo\{([^/]+)/[^}]+\}"\s+drawable="([^"]+)"'
+    return re.findall(pattern, xml_content)
+
+
+def _parse_appfilter_xml(appfilter_path):
+    """
+    Method 2: XML-parser based (contributed by community).
+    More robust with non-standard appfilter.xml schemes.
+    Handles multiple components per drawable and various formats.
+    Returns list of (package_name, drawable_name) tuples.
+    Credits: Reddit user suggestion via r/HyperOS
+    """
+    import xml.etree.ElementTree as ET
+
+    try:
+        tree = ET.parse(appfilter_path)
+        root = tree.getroot()
+    except ET.ParseError:
+        return []
+
+    drawable_map = {}
+
+    for item in root.findall("item"):
+        component = item.get("component")
+        drawable = item.get("drawable")
+        if not component or not drawable:
+            continue
+
+        # Clean component name
+        component_name = component.replace("ComponentInfo{", "").replace("}", "").strip()
+        if component_name.startswith(":"):
+            continue
+
+        parts = component_name.split("/")
+        if drawable in drawable_map:
+            drawable_map[drawable].append(parts)
+        else:
+            drawable_map[drawable] = [parts]
+
+    # Flatten to (package_name, drawable_name) tuples
+    result = []
+    for drawable, components in drawable_map.items():
+        for component_parts in components:
+            if component_parts:
+                result.append((component_parts[0], drawable))
+
+    return result
+
+
 def rename_icons(copy_icon_dir, appfilter_path, output_dir):
     """
     Read appfilter.xml, map drawable names to package names,
     copy renamed icons to output_dir.
+
+    Uses regex parser first; falls back to XML parser if 0 matches found.
     Returns (success_count, missing_count)
     """
     output_dir = Path(output_dir)
@@ -74,8 +131,19 @@ def rename_icons(copy_icon_dir, appfilter_path, output_dir):
     with open(appfilter_path, "r", encoding="utf-8") as f:
         xml_content = f.read()
 
-    pattern = r'component="ComponentInfo\{([^/]+)/[^}]+\}"\s+drawable="([^"]+)"'
-    matches = re.findall(pattern, xml_content)
+    # Try regex first (fast, handles standard format)
+    matches = _parse_appfilter_regex(xml_content)
+
+    # Fallback to XML parser if regex found nothing
+    if not matches:
+        console.warn("Standard appfilter format not detected, trying XML parser…")
+        matches = _parse_appfilter_xml(appfilter_path)
+
+    if not matches:
+        raise RuntimeError(
+            "Could not parse appfilter.xml — no icon mappings found.\n"
+            "This icon pack may use an unsupported appfilter format."
+        )
 
     success = 0
     missing = 0

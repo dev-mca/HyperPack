@@ -132,14 +132,31 @@ def extract_and_process(apk_path, work_dir, has_pillow):
     copy_dir = work_dir / "copy_icon"
     copy_dir.mkdir(exist_ok=True)
     console.progress("Copying icons…")
+    copied = 0
     for f in icon_folder.glob("*.png"):
         shutil.copy2(f, copy_dir / f.name)
-    console.done(f"Icons staged")
+        copied += 1
+    if copied == 0:
+        console.error("No PNG icons found in the icon folder.")
+        console.info("This icon pack may use a different format (e.g. WebP or XML drawables).")
+        sys.exit(1)
+    console.done(f"Icons staged ({copied} files)")
 
     # Rename icons using appfilter
     rename_dir = work_dir / "icon_rename"
     console.progress("Renaming icons to HyperOS package names…")
-    success, missing = icons.rename_icons(copy_dir, appfilter, rename_dir)
+    try:
+        success, missing = icons.rename_icons(copy_dir, appfilter, rename_dir)
+    except RuntimeError as e:
+        console.error(str(e))
+        console.info("Try a different icon pack that uses a standard appfilter.xml format.")
+        sys.exit(1)
+
+    if success == 0:
+        console.error("No icons were renamed -- appfilter.xml mappings did not match any icon files.")
+        console.info("The icon pack may use a non-standard naming scheme.")
+        sys.exit(1)
+
     console.done(f"Renamed {success} icons  ({missing} skipped – no match in appfilter)")
 
     final_icons_dir = rename_dir
