@@ -32,7 +32,7 @@ HyperPack automates the entire process of converting a Play Store icon pack into
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/hyperpack.git
+git clone https://github.com/dev-mca/hyperpack.git
 cd hyperpack
 pip install -r requirements.txt   # optional but recommended
 ```
